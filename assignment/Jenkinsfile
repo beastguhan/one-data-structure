@@ -12,7 +12,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Installing Python dependencies..."
-                    pip install -r requirements.txt --break-system-packages
+                    pip install -r app/requirements.txt --break-system-packages
                     echo "✅ Python dependencies installed successfully!"
                 '''
             }
@@ -55,3 +55,4 @@ pipeline {
         }
     }
 }
+
