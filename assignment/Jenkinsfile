@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        APP_NAME = "flask-app"
+        DOCKER_IMAGE = "flask-app:latest"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -10,32 +15,27 @@ pipeline {
 
         stage('Install & Test') {
             steps {
-                sh '''
-                    echo "Installing Python dependencies..."
-                    pip install -r assignment/app/requirement.txt --break-system-packages
-                    echo "✅ Python dependencies installed successfully!"
-                '''
+                echo "Installing Python dependencies..."
+                sh 'pip install -r assignment/app/requirement.txt --break-system-packages'
+                echo "✅ Python dependencies installed successfully!"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    echo "Building Docker image..."
-                    docker build -t flask-app -f assignment/Dockerfile assignment
-                    echo "✅ Docker image built successfully!"
-                '''
+                echo "Building Docker image..."
+                sh 'docker build -t $DOCKER_IMAGE -f assignment/Dockerfile assignment'
             }
         }
 
         stage('Run Container Test') {
             steps {
+                echo "Running container test..."
                 sh '''
-                    echo "Running Docker container for test..."
-                    docker run -d --name flask-app-container -p 5000:5000 flask-app
+                    docker run -d --name ${APP_NAME}-container -p 5000:5000 ${DOCKER_IMAGE}
                     sleep 5
-                    docker ps
-                    echo "✅ Container is up and running!"
+                    curl -f http://localhost:5000 || (echo "❌ Flask app failed to start!" && exit 1)
+                    echo "✅ Flask app is running successfully!"
                 '''
             }
         }
@@ -43,19 +43,17 @@ pipeline {
 
     post {
         always {
-            sh '''
-                echo "Cleaning up container..."
-                docker rm -f flask-app-container || true
-                echo "✅ Cleanup complete!"
-            '''
-            echo "✅ Pipeline Finished"
+            echo "Cleaning up container..."
+            sh 'docker rm -f ${APP_NAME}-container || true'
+            echo "✅ Cleanup complete!"
         }
+
+        success {
+            echo "✅ Pipeline succeeded!"
+        }
+
         failure {
-            echo "❌ Build failed!"
+            echo "❌ Pipeline failed!"
         }
     }
 }
-
-
-
-
