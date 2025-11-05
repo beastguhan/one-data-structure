@@ -11,26 +11,31 @@ pipeline {
         stage('Install & Test') {
             steps {
                 sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
-                    echo "✅ Python dependencies installed"
+                    echo "Installing Python dependencies..."
+                    pip install -r requirements.txt --break-system-packages
+                    echo "✅ Python dependencies installed successfully!"
                 '''
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t flask-app .'
+                sh '''
+                    echo "Building Docker image..."
+                    docker build -t flask-app .
+                    echo "✅ Docker image built successfully!"
+                '''
             }
         }
 
         stage('Run Container Test') {
             steps {
                 sh '''
+                    echo "Running Docker container for test..."
                     docker run -d --name flask-app-container -p 5000:5000 flask-app
                     sleep 5
                     docker ps
+                    echo "✅ Container is up and running!"
                 '''
             }
         }
@@ -38,7 +43,11 @@ pipeline {
 
     post {
         always {
-            sh 'docker rm -f flask-app-container || true'
+            sh '''
+                echo "Cleaning up container..."
+                docker rm -f flask-app-container || true
+                echo "✅ Cleanup complete!"
+            '''
             echo "✅ Pipeline Finished"
         }
         failure {
