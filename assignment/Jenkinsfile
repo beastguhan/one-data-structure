@@ -43,11 +43,6 @@ pipeline {
 
     post {
         always {
-            sh '''
-                echo "Cleaning up container..."
-                docker rm -f flask-app-container || true
-                echo "✅ Cleanup complete!"
-            '''
             echo "✅ Pipeline Finished"
         }
         failure {
@@ -55,6 +50,3 @@ pipeline {
         }
     }
 }
-
-
-
